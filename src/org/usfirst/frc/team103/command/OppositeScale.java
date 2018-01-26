@@ -6,6 +6,8 @@ import edu.wpi.first.wpilibj.command.CommandGroup;
 
 public class OppositeScale extends CommandGroup {
 	
+	private static final double SPEED_HIGH = 0.8, SPEED_LOW = 0.6, POSITION_ERROR = 5.0, ANGLE_ERROR = 5.0;
+	
 	public OppositeScale() {
 		requires(RobotMap.drive);
 		
@@ -17,11 +19,16 @@ public class OppositeScale extends CommandGroup {
 		addSequential(new DriveTo(0.0, 180.0, 180.0, 0.5, 0.5, 5.0, 5.0));
 		addSequential(new DriveTo(0.0, 210.0, 270.0, 0.5, 0.5, 5.0, 5.0));
 		addSequential(new DriveTo(0.0, 240.0, 0.0, 0.5, 0.0));*/
-		addSequential(new DriveTo(0.0, 185.0, 0.0, 0.8, 0.6, 5.0, 3.0));
-		addSequential(new DriveTo(-20.0, 205.0, 0.0, 0.6, 0.6, 5.0, 3.0));
-		addSequential(new DriveTo(-220.0, 205.0, 0.0, 0.8, 0.6, 5.0, 3.0));
-		addSequential(new DriveTo(-240.0, 225.0, 0.0, 0.6, 0.6, 5.0, 3.0));
-		addSequential(new DriveTo(-240.0, 305.0, 90.0, 0.6, 0.0));
+		addSequential(new DriveTo(0.0, 185.0, 0.0, SPEED_HIGH, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-20.0, 205.0, 0.0, SPEED_LOW, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-220.0, 205.0, 0.0, SPEED_HIGH, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-240.0, 225.0, 0.0, SPEED_LOW, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-240.0, 305.0, 90.0, SPEED_LOW, 0.0));
+		addSequential(new DriveTo(-240.0, 225.0, 0.0, SPEED_LOW, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-220.0, 205.0, 0.0, SPEED_LOW, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(-20.0, 205.0, 0.0, SPEED_HIGH, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(0.0, 185.0, 0.0, SPEED_LOW, SPEED_LOW, POSITION_ERROR, ANGLE_ERROR));
+		addSequential(new DriveTo(0.0, 0.0, 0.0, SPEED_HIGH, 0.0));
 	}
 
 }

@@ -3,10 +3,13 @@ package org.usfirst.frc.team103.robot;
 import static org.usfirst.frc.team103.robot.Commands.*;
 import static org.usfirst.frc.team103.robot.RobotMap.*;
 
+import org.usfirst.frc.team103.command.DoubleRightSwitch;
 import org.usfirst.frc.team103.command.DriveTo;
 import org.usfirst.frc.team103.command.MiddleCubes;
 import org.usfirst.frc.team103.command.OppositeScale;
+import org.usfirst.frc.team103.command.RightSwitchLeftScale;
 import org.usfirst.frc.team103.command.TeleopDrive;
+import org.usfirst.frc.team103.command.RightSwitchRightScale;
 import org.usfirst.frc.team103.pixy.Pixy;
 import org.usfirst.frc.team103.pixy.Pixy.ExposureSetting;
 import org.usfirst.frc.team103.pixy.Pixy.WhiteBalanceSetting;
@@ -55,21 +58,17 @@ public class Robot extends TimedRobot {
     		}
     	}, true));
 
-        //new JoystickButton(leftJoy, 6).whenPressed(instantCommand(() -> fieldZeroHeading = navX.getFusedHeading(), true));
         new JoystickButton(leftJoy, 6).whenPressed(instantCommand(() -> {
         	fieldZeroHeading = (navX.getYaw() + 360.0) % 360.0;
         	positioning.setOrigin();
         }, true));
-        //new JoystickButton(leftJoy, 10).whenPressed(instantCommand(() -> positioning.setOrigin(), true));
-        /*new JoystickButton(leftJoy, 11).whenPressed(instantCommand(() -> {
-			RobotMap.driveLeftFront.setSelectedSensorPosition(0, 0, 0);
-			RobotMap.driveLeftRear.setSelectedSensorPosition(0, 0, 0);
-			RobotMap.driveRightFront.setSelectedSensorPosition(0, 0, 0);
-			RobotMap.driveRightRear.setSelectedSensorPosition(0, 0, 0);
-        }, true));*/
         new JoystickButton(leftJoy, 8).whenPressed(new TeleopDrive());
         new JoystickButton(leftJoy, 9).whenPressed(new MiddleCubes());
         new JoystickButton(leftJoy, 10).whenReleased(new OppositeScale());
+        new JoystickButton(leftJoy, 11).whenReleased(new RightSwitchRightScale());
+        new JoystickButton(rightJoy, 6).whenReleased(new DoubleRightSwitch());
+        new JoystickButton(rightJoy, 7).whenReleased(new RightSwitchLeftScale());
+        
         
         new JoystickButton(rightJoy, 8).whenPressed(instantCommand(() -> {
         	driveLeftFront.setNeutralMode(NeutralMode.Brake);
@@ -83,7 +82,8 @@ public class Robot extends TimedRobot {
         	driveRightFront.setNeutralMode(NeutralMode.Coast);
         	driveRightRear.setNeutralMode(NeutralMode.Coast);
         }, true));
-        //new DriveStraight(0.0, 0.0, 1000.0).start();
+        new JoystickButton(rightJoy, 10).whenPressed(instantCommand(() -> TeleopDrive.usePID = false, true));
+        new JoystickButton(rightJoy, 11).whenPressed(instantCommand(() -> TeleopDrive.usePID = true, true));
 	}
 	
 	@Override
@@ -107,6 +107,8 @@ public class Robot extends TimedRobot {
 		
 		SmartDashboard.putNumber("FusedHeading", RobotMap.navX.getFusedHeading());
 		SmartDashboard.putNumber("Yaw", (navX.getYaw() + 360.0) % 360.0);
+		
+		SmartDashboard.putNumber("Ultrasonic1", ultrasonic1.getRangeInches());
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import org.usfirst.frc.team103.robot.RobotMap;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 
 public class MiddleCubes extends CommandGroup {
-	private static final double SPEED = 0.8;
+	private static final double SPEED = 1.0;
 	
 	public MiddleCubes() {
 		requires(RobotMap.drive);

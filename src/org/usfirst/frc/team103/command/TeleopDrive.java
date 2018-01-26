@@ -5,6 +5,8 @@ import org.usfirst.frc.team103.robot.RobotMap;
 import edu.wpi.first.wpilibj.command.Command;
 
 public class TeleopDrive extends Command {
+	public static boolean usePID = false;
+	
 	private double zeroHeading = 0.0;
 
 	public TeleopDrive() {
@@ -28,7 +30,7 @@ public class TeleopDrive extends Command {
     		forward = temp;
 		}
 		
-		RobotMap.drive.swerveDrive(strafe, forward, omega, true, false);
+		RobotMap.drive.swerveDrive(strafe, forward, omega, true, usePID);
 	}
 
 	@Override
