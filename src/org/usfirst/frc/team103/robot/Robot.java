@@ -1,27 +1,25 @@
 package org.usfirst.frc.team103.robot;
 
-import static org.usfirst.frc.team103.robot.Commands.*;
-import static org.usfirst.frc.team103.robot.RobotMap.*;
+import static org.usfirst.frc.team103.robot.RobotMap.driveLeftFront;
+import static org.usfirst.frc.team103.robot.RobotMap.driveLeftRear;
+import static org.usfirst.frc.team103.robot.RobotMap.driveRightFront;
+import static org.usfirst.frc.team103.robot.RobotMap.driveRightRear;
+import static org.usfirst.frc.team103.robot.RobotMap.leftJoy;
+import static org.usfirst.frc.team103.robot.RobotMap.navX;
+import static org.usfirst.frc.team103.robot.RobotMap.positioning;
+import static org.usfirst.frc.team103.util.Commands.instantCommand;
 
-import org.usfirst.frc.team103.command.DoubleRightSwitch;
-import org.usfirst.frc.team103.command.DriveTo;
-import org.usfirst.frc.team103.command.MiddleCubes;
-import org.usfirst.frc.team103.command.OppositeScale;
-import org.usfirst.frc.team103.command.RightSwitchLeftScale;
-import org.usfirst.frc.team103.command.TeleopDrive;
-import org.usfirst.frc.team103.command.RightSwitchRightScale;
-import org.usfirst.frc.team103.pixy.Pixy;
-import org.usfirst.frc.team103.pixy.Pixy.ExposureSetting;
-import org.usfirst.frc.team103.pixy.Pixy.WhiteBalanceSetting;
-
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
+import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
+	private Command autonomousCommand;
 
 	@Override
 	public void robotInit() {
@@ -29,48 +27,13 @@ public class Robot extends TimedRobot {
 		//Trevor wasn't here
 		
 		RobotMap.init();
-        
-        SmartDashboard.putData("Enumerate", instantCommand(() -> Pixy.enumerate(), true));
-        SmartDashboard.putData("GetParameters", instantCommand(() -> {
-    		try {
-        		pixy.stopBlockProgram();
-        		pixy.stopFrameGrabber();
-        		Thread.sleep(200);
-        		getParameters();
-        		Thread.sleep(200);
-        		pixy.startBlockProgram();
-        		pixy.startFrameGrabber();
-    		} catch (InterruptedException e) {
-    			e.printStackTrace();
-    		}
-    	}, true));
-        SmartDashboard.putData("SetParameters", instantCommand(() -> {
-    		try {
-        		pixy.stopBlockProgram();
-        		pixy.stopFrameGrabber();
-        		Thread.sleep(200);
-        		setParameters();
-        		Thread.sleep(200);
-        		pixy.startBlockProgram();
-        		pixy.startFrameGrabber();
-    		} catch (InterruptedException e) {
-    			e.printStackTrace();
-    		}
-    	}, true));
 
         new JoystickButton(leftJoy, 6).whenPressed(instantCommand(() -> {
-        	fieldZeroHeading = (navX.getYaw() + 360.0) % 360.0;
-        	positioning.setOrigin();
+        	positioning.setFieldZeroHeading((navX.getYaw() + 360.0) % 360.0);
+        	positioning.setPosition(-103.0, 15.0);
         }, true));
-        new JoystickButton(leftJoy, 8).whenPressed(new TeleopDrive());
-        new JoystickButton(leftJoy, 9).whenPressed(new MiddleCubes());
-        new JoystickButton(leftJoy, 10).whenReleased(new OppositeScale());
-        new JoystickButton(leftJoy, 11).whenReleased(new RightSwitchRightScale());
-        new JoystickButton(rightJoy, 6).whenReleased(new DoubleRightSwitch());
-        new JoystickButton(rightJoy, 7).whenReleased(new RightSwitchLeftScale());
         
-        
-        new JoystickButton(rightJoy, 8).whenPressed(instantCommand(() -> {
+        /*new JoystickButton(rightJoy, 8).whenPressed(instantCommand(() -> {
         	driveLeftFront.setNeutralMode(NeutralMode.Brake);
         	driveLeftRear.setNeutralMode(NeutralMode.Brake);
         	driveRightFront.setNeutralMode(NeutralMode.Brake);
@@ -83,18 +46,13 @@ public class Robot extends TimedRobot {
         	driveRightRear.setNeutralMode(NeutralMode.Coast);
         }, true));
         new JoystickButton(rightJoy, 10).whenPressed(instantCommand(() -> TeleopDrive.usePID = false, true));
-        new JoystickButton(rightJoy, 11).whenPressed(instantCommand(() -> TeleopDrive.usePID = true, true));
+        new JoystickButton(rightJoy, 11).whenPressed(instantCommand(() -> TeleopDrive.usePID = true, true));*/
 	}
 	
 	@Override
 	public void robotPeriodic() {
-		/*SmartDashboard.putNumber("Left Front Speed", RobotMap.driveLeftFront.getSpeed());
-		SmartDashboard.putNumber("Left Rear Speed", RobotMap.driveLeftRear.getSpeed());
-		SmartDashboard.putNumber("Right Front Speed", RobotMap.driveRightFront.getSpeed());
-		SmartDashboard.putNumber("Right Rear Speed", RobotMap.driveRightRear.getSpeed()); */
-		
 		Scheduler.getInstance().run();
-		Vision.findCube();
+		
 		SmartDashboard.putNumber("SteerLeftFront", RobotMap.steerLeftFront.getSelectedSensorPosition(0));
 		SmartDashboard.putNumber("SteerLeftRear", RobotMap.steerLeftRear.getSelectedSensorPosition(0));
 		SmartDashboard.putNumber("SteerRightFront", RobotMap.steerRightFront.getSelectedSensorPosition(0));
@@ -104,84 +62,65 @@ public class Robot extends TimedRobot {
 		SmartDashboard.putNumber("DriveLeftRear", RobotMap.driveLeftRear.getSelectedSensorPosition(0));
 		SmartDashboard.putNumber("DriveRightFront", RobotMap.driveRightFront.getSelectedSensorPosition(0));
 		SmartDashboard.putNumber("DriveRightRear", RobotMap.driveRightRear.getSelectedSensorPosition(0));
+
+		SmartDashboard.putNumber("SpeedLeftFront", RobotMap.driveLeftFront.getSelectedSensorVelocity(0));
+		SmartDashboard.putNumber("SpeedLeftRear", RobotMap.driveLeftRear.getSelectedSensorVelocity(0));
+		SmartDashboard.putNumber("SpeedRightFront", RobotMap.driveRightFront.getSelectedSensorVelocity(0));
+		SmartDashboard.putNumber("SpeedRightRear", RobotMap.driveRightRear.getSelectedSensorVelocity(0));
 		
 		SmartDashboard.putNumber("FusedHeading", RobotMap.navX.getFusedHeading());
 		SmartDashboard.putNumber("Yaw", (navX.getYaw() + 360.0) % 360.0);
 		
-		SmartDashboard.putNumber("Ultrasonic1", ultrasonic1.getRangeInches());
-	}
+		SmartDashboard.putNumber("DriveLeftFrontError", RobotMap.driveLeftFront.getClosedLoopError(0));
+		SmartDashboard.putNumber("DriveLeftRearError", RobotMap.driveLeftRear.getClosedLoopError(0));
+		SmartDashboard.putNumber("DriveRightFrontError", RobotMap.driveRightFront.getClosedLoopError(0));
+		SmartDashboard.putNumber("DriveRightRearError", RobotMap.driveRightRear.getClosedLoopError(0));
 
+		SmartDashboard.putNumber("ElevatorFront", RobotMap.elevatorFront.getSelectedSensorPosition(0));
+		SmartDashboard.putNumber("ElevatorRear", RobotMap.elevatorRear.getSelectedSensorPosition(0));
+		
+		SmartDashboard.putNumber("ElevatorFrontSpeed", RobotMap.elevatorFront.getSelectedSensorVelocity(0));
+		SmartDashboard.putNumber("ElevatorTrajectoryPosition", RobotMap.elevatorFront.getActiveTrajectoryPosition());
+		SmartDashboard.putNumber("ElevatorOutput", RobotMap.elevatorFront.getMotorOutputPercent());
+	}
+	
+	@Override
+	public void disabledInit() {
+		RobotMap.elevatorFront.set(ControlMode.Disabled, 0.0);
+	}
+	
 	@Override
 	public void autonomousInit() {
+		RobotMap.elevatorFront.setSelectedSensorPosition(0, 0, 0);
+		driveLeftFront.setNeutralMode(NeutralMode.Brake);
+		driveLeftRear.setNeutralMode(NeutralMode.Brake);
+		driveRightFront.setNeutralMode(NeutralMode.Brake);
+		driveRightRear.setNeutralMode(NeutralMode.Brake);
+		
+		autonomousCommand = RobotMap.autonomous.generateAutonomous();
+		autonomousCommand.start();
 	}
-
 	
 	@Override
 	public void autonomousPeriodic() {
 		
-		
 	}
-
-
+	
+	@Override
+	public void teleopInit() {
+		driveLeftFront.setNeutralMode(NeutralMode.Coast);
+		driveLeftRear.setNeutralMode(NeutralMode.Coast);
+		driveRightFront.setNeutralMode(NeutralMode.Coast);
+		driveRightRear.setNeutralMode(NeutralMode.Coast);
+		
+		if (autonomousCommand != null) {
+			autonomousCommand.cancel();
+		}
+	}
+	
 	@Override
 	public void teleopPeriodic() {
-		/*if (RobotMap.rightJoy.getTrigger()) {
-			CubeTarget target = Vision.findCube();
-			if (target != null) {
-				double omega = (double) (target.x - 160) / 160.0 * 0.5;
-				RobotMap.drive.swerveDrive(0.0, 1.0, omega, true, true);
-			} else {
-				RobotMap.drive.swerveDrive(0, 0, 0, true, true);
-			}
-		} else if (RobotMap.leftJoy.getRawButton(10)) {
-			double distance = (Math.abs(RobotMap.driveLeftFront.getSelectedSensorPosition(0))
-					+ Math.abs(RobotMap.driveLeftRear.getSelectedSensorPosition(0))
-					+ Math.abs(RobotMap.driveRightFront.getSelectedSensorPosition(0))
-					+ Math.abs(RobotMap.driveRightRear.getSelectedSensorPosition(0))) / 4.0;
-			SmartDashboard.putNumber("DriveDistance", distance);
-			if (distance < 2000.0) {
-				RobotMap.drive.swerveDrive(0.0, 0.5, 0.0, true, true);
-			} else {
-				RobotMap.drive.swerveDrive(0.0, 0.0, 0.0, true, true);
-			}
-		}*/
-	}
-
-	
-	@Override
-	public void testPeriodic() {
-	}
-	
-	private void getParameters() {
-		boolean aec = pixy.getAutoExposure();
-		boolean awb = pixy.getAutoWhiteBalance();
-		ExposureSetting exp = pixy.getExposureCompensation();
-		WhiteBalanceSetting wbv = pixy.getWhiteBalanceValue();
-		SmartDashboard.putBoolean("AutoExposure", aec);
-		SmartDashboard.putBoolean("AutoWhiteBalance", awb);
-		SmartDashboard.putNumber("ExposureGain", exp.gain);
-		SmartDashboard.putNumber("ExposureCompensation", exp.compensation);
-		SmartDashboard.putNumber("WhiteBalanceRed", wbv.red);
-		SmartDashboard.putNumber("WhiteBalanceGreen", wbv.green);
-		SmartDashboard.putNumber("WhiteBalanceBlue", wbv.blue);
-	}
-
-	private void setParameters() {
-		boolean aec = SmartDashboard.getBoolean("AutoExposure", false);
-		boolean awb = SmartDashboard.getBoolean("AutoWhiteBalance", false);
-		int gain = (int) SmartDashboard.getNumber("ExposureGain", 20);
-		int comp = (int) SmartDashboard.getNumber("ExposureCompensation", 100);
-		int r = (int) SmartDashboard.getNumber("WhiteBalanceRed", 64);
-		int g = (int) SmartDashboard.getNumber("WhiteBalanceGreen", 64);
-		int b = (int) SmartDashboard.getNumber("WhiteBalanceBlue", 64);
-		pixy.setAutoExposure(aec);
-		if (!aec) {
-			pixy.setExposureCompensation(new ExposureSetting(gain, comp));
-		}
-		pixy.setAutoWhiteBalance(awb);
-		if (!awb) {
-			pixy.setWhiteBalanceValue(new WhiteBalanceSetting(r, g, b));
-		}
+		
 	}
 }
 

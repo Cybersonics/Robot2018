@@ -15,22 +15,47 @@ public class TeleopDrive extends Command {
 	
 	@Override
 	protected void execute() {
-		double strafe = RobotMap.leftJoy.getX();
-		double forward = -RobotMap.leftJoy.getY();
+		/*double leftExponent = 2.0 - RobotMap.leftJoy.getRawAxis(2);
+		double rightExponent = 2.0 - RobotMap.rightJoy.getRawAxis(2);
+		
+		double leftX = RobotMap.leftJoy.getX();
+		double leftY = -RobotMap.leftJoy.getY();
+		double rightX = RobotMap.rightJoy.getX();
+		
+		double strafe = Math.signum(leftX) * Math.pow(Math.abs(leftX), leftExponent);
+		double forward = Math.signum(leftY) * Math.pow(Math.abs(leftY), leftExponent);
+		double omega = Math.signum(rightX) * Math.pow(Math.abs(rightX), rightExponent);*/
+		
+		double strafe = RobotMap.leftJoy.getX();  
+		double forward = -RobotMap.leftJoy.getY(); 
 		double omega = RobotMap.rightJoy.getX();
+		
+		/*double frequency = 3.0;
+		if (RobotMap.controller.getXButton()) {
+			omega = Math.sin(Timer.getFPGATimestamp() * frequency * 2.0 * Math.PI);
+		}
+		if (RobotMap.controller.getYButton()) {
+			forward = Math.sin(Timer.getFPGATimestamp() * frequency * 2.0 * Math.PI);
+		}*/
+		
+		if (RobotMap.rightJoy.getTrigger()) {
+			strafe *= 0.5;
+			forward *= 0.5;
+			omega *= 0.5;
+		}
 		
 		if (RobotMap.leftJoy.getRawButton(7)) {
 			zeroHeading = RobotMap.positioning.getHeading();
 		}
 		
-		if (RobotMap.leftJoy.getTrigger()) {
+		if (!RobotMap.leftJoy.getTrigger()) {
 			double originCorrection = Math.toRadians(zeroHeading - RobotMap.positioning.getHeading());
     		double temp = forward * Math.cos(originCorrection) - strafe * Math.sin(originCorrection);
     		strafe = strafe * Math.cos(originCorrection) + forward * Math.sin(originCorrection);
     		forward = temp;
 		}
 		
-		RobotMap.drive.swerveDrive(strafe, forward, omega, true, usePID);
+		RobotMap.drive.swerveDrive(strafe, forward, omega, true, usePID, true);
 	}
 
 	@Override

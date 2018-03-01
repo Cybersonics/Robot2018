@@ -1,10 +1,10 @@
 package org.usfirst.frc.team103.robot;
 
-import org.usfirst.frc.team103.pixy.Pixy;
-import org.usfirst.frc.team103.pixy.Pixy.ExposureSetting;
-import org.usfirst.frc.team103.pixy.Pixy.WhiteBalanceSetting;
-
+import com.ctre.phoenix.ParamEnum;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
+import com.ctre.phoenix.motorcontrol.LimitSwitchSource;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.VelocityMeasPeriod;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -12,13 +12,15 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.XboxController;
 
 public class RobotMap {
     public static TalonSRX driveLeftFront;
     public static TalonSRX driveLeftRear;
     public static TalonSRX driveRightFront;
     public static TalonSRX driveRightRear;
+    // For steering motors, positive throttle corresponds to clockwise rotation, with
+    // encoder position 0 is for straight forward
     public static TalonSRX steerLeftFront;
     public static TalonSRX steerLeftRear;
     public static TalonSRX steerRightFront;
@@ -27,22 +29,29 @@ public class RobotMap {
 	
     public static Joystick leftJoy; 
     public static Joystick rightJoy;
+    public static XboxController controller;
     
-    private static final double DRIVE_P = 6.0, DRIVE_I = 0.005, DRIVE_D = 1.0, DRIVE_F = 0.0, DRIVE_RAMP_RATE = 0.2;
-    private static final int DRIVE_I_ZONE = 300, DRIVE_ALLOWABLE_ERROR = 15, DRIVE_MEASUREMENT_WINDOW = 1;
-    private static final VelocityMeasPeriod DRIVE_MEASUREMENT_PERIOD = VelocityMeasPeriod.Period_10Ms;
+    private static final double DRIVE_P = 7.5, DRIVE_I = 0.0, DRIVE_D = 75.0, DRIVE_F = 1.7, DRIVE_RAMP_RATE = 0.2;
+    private static final int DRIVE_I_ZONE = 0, DRIVE_ALLOWABLE_ERROR = 0, DRIVE_MEASUREMENT_WINDOW = 1;
+    private static final VelocityMeasPeriod DRIVE_MEASUREMENT_PERIOD = VelocityMeasPeriod.Period_20Ms;
     private static final int STATUS_FRAME_PERIOD = 5;
     
-    public static Pixy pixy;
-    
     public static AHRS navX;
-    public static volatile double fieldZeroHeading;
     public static Positioning positioning;
-    public static Ultrasonic ultrasonic1;
+    public static UltrasonicPositioning ultrasonicPositioning;
+    
+    public static TalonSRX elevatorFront, elevatorRear;
+    public static Elevator elevator;
+    
+    public static TalonSRX armFront, armRear, conveyor;
+    public static CubeHandler cubeHandler;
+    
+    public static Autonomous autonomous;
 	
 	public static void init(){
         driveLeftFront = new TalonSRX(10);
         driveLeftFront.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+        //driveLeftFront.setSensorPhase(true);
         driveLeftFront.config_kP(0, DRIVE_P, 0);
         driveLeftFront.config_kI(0, DRIVE_I, 0);
         driveLeftFront.config_kD(0, DRIVE_D, 0);
@@ -55,8 +64,8 @@ public class RobotMap {
         driveLeftFront.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         driveLeftRear = new TalonSRX(11);
-        driveLeftRear.setSensorPhase(true);
         driveLeftRear.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+        //driveLeftRear.setSensorPhase(true);
         driveLeftRear.config_kP(0, DRIVE_P, 0);
         driveLeftRear.config_kI(0, DRIVE_I, 0);
         driveLeftRear.config_kD(0, DRIVE_D, 0);
@@ -69,8 +78,8 @@ public class RobotMap {
         driveLeftRear.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         driveRightFront = new TalonSRX(12);
-        driveRightFront.setInverted(true);
         driveRightFront.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+        //driveRightFront.setSensorPhase(true);
         driveRightFront.config_kP(0, DRIVE_P, 0);
         driveRightFront.config_kI(0, DRIVE_I, 0);
         driveRightFront.config_kD(0, DRIVE_D, 0);
@@ -83,8 +92,9 @@ public class RobotMap {
         driveRightFront.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         driveRightRear = new TalonSRX(13);
-        driveRightRear.setInverted(true);
         driveRightRear.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, 0);
+		//XXX: REMOVE THIS BEFORE COMPETITION, SENSOR PHASE SHOULD NOT BE INVERTED
+        //driveRightRear.setSensorPhase(true);
         driveRightRear.config_kP(0, DRIVE_P, 0);
         driveRightRear.config_kI(0, DRIVE_I, 0);
         driveRightRear.config_kD(0, DRIVE_D, 0);
@@ -98,70 +108,100 @@ public class RobotMap {
         
         steerLeftFront = new TalonSRX(16);
         steerLeftFront.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
+        steerLeftFront.setInverted(true);
         steerLeftFront.config_kP(0, 10.0, 0);
         steerLeftFront.config_kI(0, 0.02, 0);
         steerLeftFront.config_kD(0, 0.0, 0);
         steerLeftFront.config_IntegralZone(0, 100, 0);
         steerLeftFront.configAllowableClosedloopError(0, 5, 0);
+        steerLeftFront.setNeutralMode(NeutralMode.Brake);
         steerLeftFront.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         steerLeftRear = new TalonSRX(17);
         steerLeftRear.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
+        steerLeftRear.setInverted(true);
         steerLeftRear.config_kP(0, 10.0, 0);
         steerLeftRear.config_kI(0, 0.02, 0);
         steerLeftRear.config_kD(0, 0.0, 0);
         steerLeftRear.config_IntegralZone(0, 100, 0);
         steerLeftRear.configAllowableClosedloopError(0, 5, 0);
+        steerLeftRear.setNeutralMode(NeutralMode.Brake);
         steerLeftRear.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         steerRightFront = new TalonSRX(18);
         steerRightFront.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
+        steerRightFront.setInverted(true);
         steerRightFront.config_kP(0, 10.0, 0);
         steerRightFront.config_kI(0, 0.02, 0);
         steerRightFront.config_kD(0, 0.0, 0);
         steerRightFront.config_IntegralZone(0, 100, 0);
         steerRightFront.configAllowableClosedloopError(0, 5, 0);
+        steerRightFront.setNeutralMode(NeutralMode.Brake);
         steerRightFront.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         steerRightRear = new TalonSRX(19);
         steerRightRear.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
+        steerRightRear.setInverted(true);
         steerRightRear.config_kP(0, 10.0, 0);
         steerRightRear.config_kI(0, 0.02, 0);
         steerRightRear.config_kD(0, 0.0, 0);
         steerRightRear.config_IntegralZone(0, 100, 0);
         steerRightRear.configAllowableClosedloopError(0, 5, 0);
+        steerRightRear.setNeutralMode(NeutralMode.Brake);
         steerRightRear.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, STATUS_FRAME_PERIOD, 0);
         
         drive = new Drive();
+		
+		elevatorFront = new TalonSRX(20);
+		elevatorFront.setInverted(true);
+		//XXX: REMOVE THIS BEFORE COMPETITION, SENSOR PHASE SHOULD NOT BE INVERTED
+		//elevatorFront.setSensorPhase(true);
+		elevatorFront.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 0);
+		elevatorFront.setNeutralMode(NeutralMode.Brake);
+        elevatorFront.config_kP(0, 1.0, 0);
+        elevatorFront.config_kI(0, 0.0, 0);
+        elevatorFront.config_kD(0, 0.0, 0);
+        elevatorFront.config_kF(0, 1.2, 0);
+        elevatorFront.configVelocityMeasurementWindow(1, 0);
+        elevatorFront.configVelocityMeasurementPeriod(VelocityMeasPeriod.Period_10Ms, 0);
+		elevatorFront.configMotionAcceleration(2400, 0);
+		elevatorFront.configMotionCruiseVelocity(1200, 0);
+		elevatorFront.configForwardSoftLimitThreshold(Elevator.MAX_HEIGHT, 0);
+		elevatorFront.configReverseSoftLimitThreshold(Elevator.MIN_HEIGHT, 0);
+		elevatorFront.configForwardSoftLimitEnable(true, 0);
+		elevatorFront.configReverseSoftLimitEnable(true, 0);
+		elevatorFront.configForwardLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen, 0);
+		elevatorFront.configReverseLimitSwitchSource(LimitSwitchSource.FeedbackConnector, LimitSwitchNormal.NormallyOpen, 0);
+		elevatorFront.configSetParameter(ParamEnum.eClearPositionOnLimitF, 0, 0, 0, 0);
+		elevatorFront.configSetParameter(ParamEnum.eClearPositionOnLimitR, 1, 0, 0, 0);
+		
+		elevatorRear = new TalonSRX(21);
+		elevatorRear.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 0);
+		elevatorRear.setNeutralMode(NeutralMode.Brake);
+		elevatorRear.follow(elevatorFront);
+		
+		elevator = new Elevator();
+		
+		armFront = new TalonSRX(24);
+		armFront.setNeutralMode(NeutralMode.Coast);
+		armRear = new TalonSRX(23);
+		armRear.setNeutralMode(NeutralMode.Coast);
+		conveyor = new TalonSRX(22);
+		conveyor.setNeutralMode(NeutralMode.Brake);
+		
+		cubeHandler = new CubeHandler();
         
         leftJoy = new Joystick(0);
         rightJoy = new Joystick(1);
-		
-		Pixy.ensureAvailable(0xF8F5B551);
-		pixy = new Pixy(0xF8F5B551);
-		try {
-			Thread.sleep(200);
-			pixy.setAutoExposure(false);
-			pixy.setExposureCompensation(new ExposureSetting(20, 150));
-			pixy.setAutoWhiteBalance(false);
-			pixy.setWhiteBalanceValue(new WhiteBalanceSetting(72, 64, 122));
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		pixy.startBlockProgram();
-		pixy.startFrameGrabber();
+        controller = new XboxController(2);
 		
 		navX = new AHRS(SPI.Port.kMXP);
 		
 		positioning = new Positioning();
+		ultrasonicPositioning = new UltrasonicPositioning();
 		
-		/*for (StatusFrameEnhanced frame : StatusFrameEnhanced.values()) {
-			System.out.println(frame.name() + ": " + driveLeftFront.getStatusFramePeriod(frame, 0));
-		}*/
-		
-		ultrasonic1 = new Ultrasonic(6, 7);
-		ultrasonic1.setAutomaticMode(true);
+		autonomous = new Autonomous();
+		autonomous.initializeOptions();
 	}
 	
 	
