@@ -10,6 +10,10 @@ import com.ctre.phoenix.motorcontrol.VelocityMeasPeriod;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
+import org.usfirst.frc.team103.pixy.Pixy;
+import org.usfirst.frc.team103.pixy.Pixy.ExposureSetting;
+import org.usfirst.frc.team103.pixy.Pixy.WhiteBalanceSetting;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.XboxController;
@@ -47,6 +51,8 @@ public class RobotMap {
     public static CubeHandler cubeHandler;
     
     public static Autonomous autonomous;
+
+    public static Pixy pixy, pixy2;
 	
 	public static void init(){
         driveLeftFront = new TalonSRX(10);
@@ -201,7 +207,19 @@ public class RobotMap {
 		ultrasonicPositioning = new UltrasonicPositioning();
 		
 		autonomous = new Autonomous();
-		autonomous.initializeOptions();
+        autonomous.initializeOptions();
+        
+        	//Pixy.ensureAvailable(0xC6E0B552);
+		//pixy = new Pixy(0xC6E0B552);
+		Pixy.ensureAvailable(0xDC8D360A, 0x53C3165);
+        pixy = new Pixy(0xDC8D360A);
+        pixy.startBlockProgram();
+		pixy.startFrameGrabber();
+		
+		//Pixy.ensureAvailable(0x53C3165);
+        pixy2 = new Pixy(0x53C3165);
+        pixy2.startBlockProgram();
+        pixy2.startFrameGrabber();
 	}
 	
 	

@@ -53,6 +53,10 @@ dependencies {
     nativeZip wpi.deps.vendor.jni(wpi.platforms.roborio)
     nativeDesktopZip wpi.deps.vendor.jni(wpi.platforms.desktop)
     testCompile 'junit:junit:4.12'
+
+    //Non-FRC dependancies
+    nativeLib fileTree(dir: 'lib', include:'*.so')
+    compile fileTree(dir: 'lib', include: ['*.jar'])
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
